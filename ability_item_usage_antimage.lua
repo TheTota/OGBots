@@ -179,7 +179,7 @@ function ConsiderBlink()
 	end
 
     -- Mode RETREAT
-    if ( npcBot:GetActiveMode() == BOT_MODE_RETREAT ) then
+    if (npcBot:GetActiveMode() == BOT_MODE_RETREAT and npcBot:GetActiveModeDesire() >= BOT_MODE_DESIRE_MODERATE) then
         if (npcBot:DistanceFromFountain() > 2000 and not npcBot:IsSilenced()) then
             return BOT_ACTION_DESIRE_VERYHIGH, GetAncient(npcBot:GetTeam()):GetLocation();
         end
@@ -205,6 +205,8 @@ function ConsiderBlink()
     return BOT_ACTION_DESIRE_NONE, 0;
 
 end
+
+----------------------------------------------------------------------------------------------------
 
 function ConsiderManaVoid()
 
@@ -236,7 +238,7 @@ function ConsiderManaVoid()
         local mostManaPointsLost = 0;
 
         -- On cherche l'ennemi ayant perdu le plus de mana
-        local tableNearbyEnemyHeroes = npcBot:GetNearbyHeroes( nCastRange, false, BOT_MODE_NONE );
+        local tableNearbyEnemyHeroes = npcBot:GetNearbyHeroes( nCastRange, true, BOT_MODE_NONE );
         for _,npcEnemy in pairs( tableNearbyEnemyHeroes )
         do
             if (CanCastManaVoidOnTarget(npcEnemy)) then
@@ -260,3 +262,10 @@ function ConsiderManaVoid()
     return BOT_ACTION_DESIRE_NONE, 0;
 
 end
+
+-- Utilisation des items
+----------------------------------------------------------------------------------------------------
+
+-- function ItemUsageThink()
+
+-- end
