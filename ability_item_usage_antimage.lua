@@ -8,7 +8,7 @@
 --   - Utilisation des items!
 --   - Attention quand il se coince avec Blink.
 --   - Meilleur blink d'évasion.
---   - Blink -> Treads switching.
+--   - Blink pour farm (avec Treads switching).
 
 ----------------------------------------------------------------------------------------------------
 
@@ -79,7 +79,6 @@ end
 
 -- Utilisation des compétences
 ----------------------------------------------------------------------------------------------------
-
 
 castBlinkDesire = 0;
 castManaVoidDesire = 0;
@@ -171,11 +170,7 @@ function ConsiderBlink()
 
     -- Mode FARM
     if ( npcBot:GetActiveMode() == BOT_MODE_FARM ) then
-		local locationAoE = npcBot:FindAoELocation( true, false, npcBot:GetLocation(), nCastRange, 0, 0, 10000 );
-
-		if ( locationAoE.count >= 3 and not npcBot:IsSilenced()) then
-			return BOT_ACTION_DESIRE_LOW, locationAoE.targetloc;
-		end
+		-- Handled dans "mode_farm_antimage.lua".
 	end
 
     -- Mode RETREAT

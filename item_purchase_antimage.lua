@@ -5,7 +5,6 @@
 -- A considérer:
 --   - Moonshard à consommer.
 --   - Achat d'item en fonction des items des autres. (ex: pas de butterfly si ennemis ont mkb).
---   - Achat de TP scrolls afin de toujours en avoir un sur soi.
 --   - Ne pas appeller le courier pour des items insignifiants (exemple un Slipper of Agility seul).
 --   - Achat d'items aux échoppes spécifique quand possibilité.
 --   - Acheter des items de régénération quand a perdu de la vie.
