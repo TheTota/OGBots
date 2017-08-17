@@ -6,8 +6,17 @@
 --   - Moonshard à consommer.
 --   - Achat d'item en fonction des items des autres. (ex: pas de butterfly si ennemis ont mkb).
 --   - Achat de TP scrolls afin de toujours en avoir un sur soi.
+--   - Ne pas appeller le courier pour des items insignifiants (exemple un Slipper of Agility seul).
+--   - Achat d'items aux échoppes spécifique quand possibilité.
+--   - Acheter des items de régénération quand a perdu de la vie.
+
+-- Remarques:
+--   - AM monopolise le coursier en appellant des petits items ou/et des items qu'il pourrait acquérir au side shop.
 
 ----------------------------------------------------------------------------------------------------
+
+-- Récupération du bot sur lequel le script est exécuté
+local npcBot = GetBot();
 
 local tableItemsToBuy = { 
                 -- start items
@@ -69,9 +78,6 @@ local tableItemsToBuy = {
 
 function ItemPurchaseThink()
 
-    -- Récupération du bot sur lequel le script est exécuté
-	local npcBot = GetBot();
-
     -- Si tous les items ont été achetés, on ne dépense plus d'argent
 	if ( #tableItemsToBuy == 0 )
 	then
@@ -80,7 +86,12 @@ function ItemPurchaseThink()
 	end
 
     -- Le prochain item à acheter est le prochain item de la liste (la liste rétrécit au fur et à mesure que les items sont achetés)
-	local sNextItem = tableItemsToBuy[1];
+	local sNextItem = nil;
+    if (OwnsTeleportationDevice() or DotaTime() < 420) then
+        sNextItem = tableItemsToBuy[1];
+    else 
+        sNextItem = "item_tpscroll";   
+    end
 
     -- On définit la valeur du prochain item à acheter au bot
 	npcBot:SetNextItemPurchaseValue( GetItemCost( sNextItem ) );
@@ -91,9 +102,19 @@ function ItemPurchaseThink()
         -- ... on achète l'item
 		npcBot:ActionImmediate_PurchaseItem( sNextItem );
         -- On enlève l'item acheté de la liste des items à acheter
-		table.remove( tableItemsToBuy, 1 );
+		if (sNextItem ~= "item_tpscroll") then
+            table.remove( tableItemsToBuy, 1 );
+        end
 	end
 
 end
 
 ----------------------------------------------------------------------------------------------------
+
+function OwnsTeleportationDevice()
+    if(npcBot:FindItemSlot("item_tpscroll") ~= -1 or npcBot:FindItemSlot("item_recipe_travel_boots") ~= -1 or npcBot:FindItemSlot("item_recipe_travel_boots_2") ~= -1) then
+        return true;
+    else
+        return false;
+    end
+end

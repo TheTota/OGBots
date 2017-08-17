@@ -1,3 +1,13 @@
+---------------------------------
+--   Rune mode for Anti-Mage   --
+---------------------------------
+
+-- A considérer:
+--   - En cas de 1v1, attaquer l'autre si AM est + fort.
+--   - Ne pas passer en mode Laning tant que la rune n'a pas été récupérée. 
+
+----------------------------------------------------------------------------------------------------
+
 local npcBot = GetBot();
 
 local bountyRuneToPick = nil;
@@ -63,17 +73,14 @@ end
 function GetDesire()
     local tableNearbyEnemyHeroes = npcBot:GetNearbyHeroes( 1000, true, BOT_MODE_NONE );
     if (#tableNearbyEnemyHeroes >= 1) then
-        print("on a au moins un ennemi à la rune!");
         local tableNearbyAlliedHeroes = npcBot:GetNearbyHeroes( 1600, false, BOT_MODE_ATTACK );
         if (#tableNearbyAlliedHeroes >= 1) then 
-            print("on a au moins un allié alors go!");
             return BOT_MODE_DESIRE_MODERATE;
         else
-            print("on n'a pas d'alliés!");
             return BOT_MODE_DESIRE_NONE;
         end
     else 
-        if (DotaTime() < 5 or not hasPickedUpFirstRune) then 
+        if (DotaTime() < 1 or not hasPickedUpFirstRune) then 
             return BOT_MODE_DESIRE_MODERATE;
         else 
             return BOT_MODE_DESIRE_NONE;

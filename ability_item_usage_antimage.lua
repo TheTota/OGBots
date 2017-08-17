@@ -8,7 +8,7 @@
 --   - Utilisation des items!
 --   - Attention quand il se coince avec Blink.
 --   - Meilleur blink d'évasion.
---   - Side shop stuck?
+--   - Blink -> Treads switching.
 
 ----------------------------------------------------------------------------------------------------
 
@@ -48,7 +48,7 @@ local tableAbilitiesLevelUp = {
     SKILL_E, -- lvl 16
     SKILL_ULT, -- lvl 18
     talentLevel20v2, -- lvl 20
-    talentLevel25v2, -- lvl 25           -- TODO: Changer en v1 ! (la v2 est pour debug le Mana Void)
+    talentLevel25v1, -- lvl 25          
 };
 
 -- Récupération du bot sur lequel est exécuté le script
