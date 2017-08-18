@@ -8,7 +8,6 @@
 --   - Utilisation des items!
 --   - Attention quand il se coince avec Blink.
 --   - Meilleur blink d'évasion.
---   - Blink pour farm (avec Treads switching).
 
 ----------------------------------------------------------------------------------------------------
 
@@ -147,7 +146,7 @@ function ConsiderBlink()
 	end
 
     -- Get some of its values
-    local nCastRange = abilityBlink:GetCastRange();
+    local nCastRange = abilityBlink:GetSpecialValueInt("blink_range");
 
     --------------------------------------
 	-- Global high-priorty usage
@@ -170,7 +169,7 @@ function ConsiderBlink()
 
     -- Mode FARM
     if ( npcBot:GetActiveMode() == BOT_MODE_FARM ) then
-		-- Handled dans "mode_farm_antimage.lua".
+		
 	end
 
     -- Mode RETREAT

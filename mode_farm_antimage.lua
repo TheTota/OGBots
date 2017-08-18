@@ -25,16 +25,19 @@ local minutsCounter = 0;
 -- Sûreté/désir minimal pour que la lane soit "farmable"
 local minFarmDesire;
 
+local isFarmingLane = false;
+local isFarmingJungle = false;
+
 ----------------------------------------------------------------------------------------------------
 
 function OnStart()
-	npcBot:ActionImmediate_Chat("I'm farming guys.", false);
+	npcBot:ActionImmediate_Chat("I'm farming guys.", false);    
 end
 
 ----------------------------------------------------------------------------------------------------
 
 function OnEnd()
-	-- Do the standard OnEnd
+    -- ...
 end
 
 ----------------------------------------------------------------------------------------------------
@@ -49,20 +52,12 @@ function Think()
     
     -- Pour le farm de la jungle, AM doit aller de camps en camps, en utilisant blink. Si il le peut, il doit farmer les ancients.
 
-    
-    -- On détermine les désires de farm pour chaque lane (pour la team)
-
-    -- reset la table des camps farmés ou vides chaque minute
-
     -- Récupération du désir de farm relatif à chaque lane
     local farmTopDesire = GetFarmLaneDesire(LANE_TOP);
     local farmMidDesire = GetFarmLaneDesire(LANE_MID);
     local farmBotDesire = GetFarmLaneDesire(LANE_BOT);
 
     local laneToFarm = LANE_NONE;
-
-    local isFarmingLane = false;
-    local isFarmingJungle = false;
 
     -- On détermine quelle lane est la + sûre, si on peut farm les lanes
     if (farmTopDesire > farmMidDesire and farmTopDesire > farmBotDesire and farmTopDesire > minFarmDesire) then
@@ -93,6 +88,8 @@ function Think()
 
     -- FARM DE LANE
     if (isFarmingLane) then
+        isFarmingCamp = false;
+
         -- Emplacement de la vague de creep meneuse de la lane
         local frontLeadingCreepWaveLocation = GetLaneFrontLocation(npcBotTeam, laneToFarm, -50 );
 
@@ -137,22 +134,39 @@ function Think()
                 end
             end
 
-            -- On va au camp et on le tue les creeps ou attaque ce qui est en chemin (provisoire)
-            
+            -- On va au camp et on le tue les creeps ou attaque ce qui est en chemin (provisoire)            
             if (not isFarmingCamp) then
+
+                -- Déplacement jusqu'au camp à farm
                 npcBot:Action_MoveToLocation(campToFarmLocation);
+                
+                -- On récupère les informations relatives à blink d'anti-mage
+                abilityBlink = npcBot:GetAbilityByName("antimage_blink");
+                local nCastRange = abilityBlink:GetSpecialValueInt("blink_range");
+                
+                if(abilityBlink:IsFullyCastable() and GetUnitToLocationDistance(npcBot, campToFarmLocation) <= nCastRange and GetUnitToLocationDistance(npcBot, campToFarmLocation) > 300) then
+                    -- Blink avec treads switching si treads
+                    if (OwnsPowerTreads()) then
+                        npcBot:Action_UseAbility(npcBot:GetItemInSlot(npcBot:FindItemSlot("item_power_treads")));
+                        npcBot:Action_UseAbility(npcBot:GetItemInSlot(npcBot:FindItemSlot("item_power_treads")));
+                    end
+                    npcBot:Action_UseAbilityOnLocation(abilityBlink, campToFarmLocation);
+                    if (OwnsPowerTreads()) then
+                        npcBot:Action_UseAbility(npcBot:GetItemInSlot(npcBot:FindItemSlot("item_power_treads")));
+                    end
+                end
             end
 
-            local creepsNeutresAuxAlentours = npcBot:GetNearbyNeutralCreeps(500);
+            local creepsNeutresAuxAlentours = npcBot:GetNearbyNeutralCreeps(750);
 
             -- Si on est près du camp à farmer et que des creeps neutres sont dans les parages on les attaque
-            if(GetUnitToLocationDistance(npcBot, campToFarmLocation) < 500 and #creepsNeutresAuxAlentours ~= 0) then
+            if(GetUnitToLocationDistance(npcBot, campToFarmLocation) < 750 and #creepsNeutresAuxAlentours ~= 0) then
                 npcBot:Action_AttackMove(campToFarmLocation);
                 isFarmingCamp = true;
             end           
 
             -- Si on farm le camp et que aucun creep neutre  
-            if(isFarmingCamp and #creepsNeutresAuxAlentours == 0) then
+            if((isFarmingCamp and #creepsNeutresAuxAlentours == 0) or (#creepsNeutresAuxAlentours == 0 and GetUnitToLocationDistance(npcBot, campToFarmLocation) < 70)) then
                 table.insert(farmedOrEmptyCamps, campToFarmLocation);
                 print("Farmed or empty camp here!");
                 isFarmingCamp = false;
@@ -246,6 +260,14 @@ end
 
 function OwnsTeleportationDevice()
     if(npcBot:FindItemSlot("item_tpscroll") ~= -1 or npcBot:FindItemSlot("item_travel_boots") ~= -1 or npcBot:FindItemSlot("item_travel_boots_2") ~= -1) then
+        return true;
+    else
+        return false;
+    end
+end
+
+function OwnsPowerTreads()
+    if(npcBot:FindItemSlot("item_power_treads") ~= -1) then
         return true;
     else
         return false;

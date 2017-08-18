@@ -100,8 +100,15 @@ function ItemPurchaseThink()
 	then
         -- ... on achète l'item
 		npcBot:ActionImmediate_PurchaseItem( sNextItem );
-        -- On enlève l'item acheté de la liste des items à acheter
-		if (sNextItem ~= "item_tpscroll") then
+        -- TODO: Améliorer car provisoir
+        if (sNextItem == "item_gloves") then
+            -- Passage des power treads en mode agilité
+            npcBot:Action_UseAbility("item_power_treads");
+            npcBot:Action_UseAbility("item_power_treads");
+        end
+
+        -- On enlève l'item acheté de la liste des items à acheter sauf si l'item acheté est un TP ou de la regen
+        if (sNextItem ~= "item_tpscroll") then
             table.remove( tableItemsToBuy, 1 );
         end
 	end
