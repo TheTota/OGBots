@@ -17,6 +17,8 @@
 -- Récupération du bot sur lequel le script est exécuté
 local npcBot = GetBot();
 
+local hasSetTreadsToAgi = false;
+
 local tableItemsToBuy = { 
                 -- start items
 				"item_tango",
@@ -100,12 +102,14 @@ function ItemPurchaseThink()
 	then
         -- ... on achète l'item
 		npcBot:ActionImmediate_PurchaseItem( sNextItem );
-        -- TODO: Améliorer car provisoir
-        if (sNextItem == "item_gloves") then
+        
+        -- TODO: Switch to agi treads
+--        if (OwnsPowerTreads() and not hasSetTreadsToAgi) then
             -- Passage des power treads en mode agilité
-            npcBot:Action_UseAbility("item_power_treads");
-            npcBot:Action_UseAbility("item_power_treads");
-        end
+--            npcBot:Action_UseAbility(npcBot:GetItemInSlot(npcBot:FindItemSlot("item_power_treads")));
+--            npcBot:Action_UseAbility(npcBot:GetItemInSlot(npcBot:FindItemSlot("item_power_treads")));
+--            hasSetTreadsToAgi = true;
+--        end
 
         -- On enlève l'item acheté de la liste des items à acheter sauf si l'item acheté est un TP ou de la regen
         if (sNextItem ~= "item_tpscroll") then
@@ -119,6 +123,14 @@ end
 
 function OwnsTeleportationDevice()
     if(npcBot:FindItemSlot("item_tpscroll") ~= -1 or npcBot:FindItemSlot("item_recipe_travel_boots") ~= -1 or npcBot:FindItemSlot("item_recipe_travel_boots_2") ~= -1) then
+        return true;
+    else
+        return false;
+    end
+end
+
+function OwnsPowerTreads()
+    if(npcBot:FindItemSlot("item_power_treads") ~= -1) then
         return true;
     else
         return false;

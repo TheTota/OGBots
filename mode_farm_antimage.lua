@@ -91,19 +91,33 @@ function Think()
         isFarmingCamp = false;
 
         -- Emplacement de la vague de creep meneuse de la lane
-        local frontLeadingCreepWaveLocation = GetLaneFrontLocation(npcBotTeam, laneToFarm, -50 );
+        local frontLeadingCreepWaveLocation = GetLaneFrontLocation(npcBotTeam, laneToFarm, -200 );
 
         -- Si la distance entre le joueur et les creeps à farm est supérieure à la distance entre la tour et les creeps farm, alors on TP.
         -- Sinon on y va à pied.
         if (isFarmingLane) then
-            if (GetLaneFrontAmount(GetEnemyTeam(), laneToFarm, false) < 0.55 or GetUnitToLocationDistance(npcBot, frontLeadingCreepWaveLocation) > 3000 and OwnsTeleportationDevice()) 
+            if (GetLaneFrontAmount(GetEnemyTeam(), laneToFarm, false) < 0.55 or GetUnitToLocationDistance(npcBot, frontLeadingCreepWaveLocation) > 3000 and OwnsTeleportationDevice() and not isFarmingCamp) 
             --and GetTeleportationDevice():isCooldownReady())
             then
                 TeleportToLocation(frontLeadingCreepWaveLocation);
             else
-                npcBot:Action_MoveToLocation(frontLeadingCreepWaveLocation);
+                -- On récupère la liste des lane creeps autour du héro
+                local tableNearbyLaneCreeps = npcBot:GetNearbyLaneCreeps(800, true);
+                
+                if (#tableNearbyLaneCreeps ~= 0) then
+                    for _,enemyCreep in pairs( tableNearbyLaneCreeps )
+                    do
+                        -- Si un creep peut être last hit alors last hit, sinon reste autour de zone de creeps
+                        if (enemyCreep:GetHealth() <= npcBot:GetAttackDamage())  then
+                            npcBot:Action_AttackUnit(enemyCreep, true);
+                        else
+                            npcBot:Action_MoveToLocation(frontLeadingCreepWaveLocation);
+                        end
+                    end
+                else
+                    npcBot:Action_MoveToLocation(frontLeadingCreepWaveLocation);
+                end
             end
-            -- Farming/last hitting code here.
         end
     else
         -- FARM DE JUNGLE
@@ -146,14 +160,15 @@ function Think()
                 
                 if(abilityBlink:IsFullyCastable() and GetUnitToLocationDistance(npcBot, campToFarmLocation) <= nCastRange and GetUnitToLocationDistance(npcBot, campToFarmLocation) > 300) then
                     -- Blink avec treads switching si treads
-                    if (OwnsPowerTreads()) then
-                        npcBot:Action_UseAbility(npcBot:GetItemInSlot(npcBot:FindItemSlot("item_power_treads")));
-                        npcBot:Action_UseAbility(npcBot:GetItemInSlot(npcBot:FindItemSlot("item_power_treads")));
-                    end
+                    -- TODO: Treads switching
+                --    if (OwnsPowerTreads()) then
+                --        npcBot:Action_UseAbility(npcBot:GetItemInSlot(npcBot:FindItemSlot("item_power_treads")));
+                --        npcBot:Action_UseAbility(npcBot:GetItemInSlot(npcBot:FindItemSlot("item_power_treads")));
+                --    end
                     npcBot:Action_UseAbilityOnLocation(abilityBlink, campToFarmLocation);
-                    if (OwnsPowerTreads()) then
-                        npcBot:Action_UseAbility(npcBot:GetItemInSlot(npcBot:FindItemSlot("item_power_treads")));
-                    end
+                --    if (OwnsPowerTreads()) then
+                --        npcBot:Action_UseAbility(npcBot:GetItemInSlot(npcBot:FindItemSlot("item_power_treads")));
+                --    end
                 end
             end
 
@@ -198,31 +213,38 @@ function GetDesire()
         end
     end
 
+    -- On vérifie qu'aucun héro ennemi n'est présent pdt le farm
+    local tableNearbyEnemyHeroes = npcBot:GetNearbyHeroes( 1600, true, BOT_MODE_NONE );
+    if (#tableNearbyEnemyHeroes >= 1 or npcBot:GetHealth() <= 300) then
+        return BOT_MODE_DESIRE_LOW;
+    end
+
     if (HasReachedDominatingStage()) then 
         -- Si AM a atteint son stade de dominance, le farm à un importance moindre.
         --print("AM has reached dominating stage");
         minFarmDesire = BOT_ACTION_DESIRE_LOW;
-        return BOT_MODE_DESIRE_VERYLOW;
+        return 0.30;
     else
         if (OwnsMantaStyle()) then 
             --print("AM owns Manta!");
             minFarmDesire = BOT_ACTION_DESIRE_MODERATE;
-            return BOT_MODE_DESIRE_LOW;
+            return 0.40;
         else
             if (OwnsBattlefury()) then
                 -- Si AM possède bfury, il veut farmer mais est plus enclin à agir avec l'équipe
                 --print("AM owns Bfury and wants to farm lanes and jungles");
-                minFarmDesire = 1.1;                                                                                                -- TODO: passer à HIGH!
-                return BOT_MODE_DESIRE_HIGH;                                                                                        -- TODO: Passer à moderate!
+                minFarmDesire = 0.625;
+                return 0.50;
             else 
                 -- Si AM ne possède pas bfury, il doit à tout prix farmer l'item
-                if(DotaTime() < 60) then                                                                                            -- TODO: Passer à 600 !
+                if(DotaTime() < 600) then
                     --print("AM doesnt own Bfury and first 10 minutes give priority to laning");
-                    return BOT_MODE_DESIRE_VERYLOW;
+                    minFarmDesire = BOT_ACTION_DESIRE_HIGH;
+                    return 0.10;
                 else                
                     --print("AM doesnt own Bfury but early game is over and he has to focus on it ")
                     minFarmDesire = BOT_ACTION_DESIRE_HIGH;
-                    return BOT_MODE_DESIRE_HIGH;
+                    return 0.60;
                 end
             end
         end

@@ -5,6 +5,7 @@
 -- A considérer:
 --   - En cas de 1v1, attaquer l'autre si AM est + fort.
 --   - Ne pas passer en mode Laning tant que la rune n'a pas été récupérée. 
+--   - Ramasser rune si AM passe juste à coté.
 
 ----------------------------------------------------------------------------------------------------
 
@@ -71,6 +72,12 @@ end
 ----------------------------------------------------------------------------------------------------
 
 function GetDesire()
+
+    -- Si la rune a été prise, on abandonne
+    if (DotaTime() > 0 and GetRuneStatus(bountyRuneToPick) == RUNE_STATUS_MISSING) then
+        return BOT_MODE_DESIRE_NONE;
+    end
+
     local tableNearbyEnemyHeroes = npcBot:GetNearbyHeroes( 1000, true, BOT_MODE_NONE );
     if (#tableNearbyEnemyHeroes >= 1) then
         local tableNearbyAlliedHeroes = npcBot:GetNearbyHeroes( 1600, false, BOT_MODE_ATTACK );
