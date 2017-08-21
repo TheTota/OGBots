@@ -21,7 +21,7 @@ end
 ----------------------------------------------------------------------------------------------------
 
 function GetDesire()
-
+    local mustBePurchaseFromSecretShop = IsItemPurchasedFromSecretShop(_G.sNextItem);
     -- TODO: Si prochain item à acheter doit être acheté au secret shop et le héro a assez d'argent pour acheter, alors désire medium
     -- Sinon désir nul. 
 

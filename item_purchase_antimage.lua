@@ -17,6 +17,10 @@
 -- Récupération du bot sur lequel le script est exécuté
 local npcBot = GetBot();
 
+_G.sNextItem = nil;
+canBePurchasedFromSideShop = false;
+mustBePurchaseFromSecretShop = false;
+
 local hasSetTreadsToAgi = false;
 
 local tableItemsToBuy = { 
@@ -87,21 +91,34 @@ function ItemPurchaseThink()
 	end
 
     -- Le prochain item à acheter est le prochain item de la liste (la liste rétrécit au fur et à mesure que les items sont achetés)
-	local sNextItem = nil;
     if (OwnsTeleportationDevice() or DotaTime() < 420) then
-        sNextItem = tableItemsToBuy[1];
+        _G.sNextItem = tableItemsToBuy[1];
     else 
-        sNextItem = "item_tpscroll";   
+        _G.sNextItem = "item_tpscroll";   
     end
 
     -- On définit la valeur du prochain item à acheter au bot
-	npcBot:SetNextItemPurchaseValue( GetItemCost( sNextItem ) );
+	npcBot:SetNextItemPurchaseValue( GetItemCost( _G.sNextItem ) );
 
+    local canBePurchasedFromSideShop = IsItemPurchasedFromSideShop(_G.sNextItem);
+
+    local goldBeforePotentialPurchase = npcBot:GetGold();
+        
     -- Si le bot a assez d'argent, ...
-	if ( npcBot:GetGold() >= GetItemCost( sNextItem ) )
-	then
-        -- ... on achète l'item
-		npcBot:ActionImmediate_PurchaseItem( sNextItem );
+	if (npcBot:GetGold() >= GetItemCost( _G.sNextItem )) then
+        if (npcBot:GetActiveMode() == BOT_MODE_SIDE_SHOP and _G.NPCHasReachedSideShop) then 
+            npcBot:ActionImmediate_PurchaseItem( _G.sNextItem );
+        else 
+            if (npcBot:GetActiveMode() == BOT_MODE_SECRET_SHOP) then -- and _G.NPCHasReachedSecretShop) then 
+                npcBot:ActionImmediate_PurchaseItem( _G.sNextItem );
+            else
+                if ((canBePurchasedFromSideShop and not _G.sideShopNearby) or (not canBePurchasedFromSideShop)) then -- do same for secret shop
+                    npcBot:ActionImmediate_PurchaseItem( _G.sNextItem );
+                end
+            end
+        end
+    
+        local goldAfterPotentialPurchase = npcBot:GetGold();
         
         -- TODO: Switch to agi treads
 --        if (OwnsPowerTreads() and not hasSetTreadsToAgi) then
@@ -112,7 +129,7 @@ function ItemPurchaseThink()
 --        end
 
         -- On enlève l'item acheté de la liste des items à acheter sauf si l'item acheté est un TP ou de la regen
-        if (sNextItem ~= "item_tpscroll") then
+        if (_G.sNextItem ~= "item_tpscroll" and goldAfterPotentialPurchase ~= goldBeforePotentialPurchase) then
             table.remove( tableItemsToBuy, 1 );
         end
 	end

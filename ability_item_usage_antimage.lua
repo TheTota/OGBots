@@ -86,6 +86,9 @@ hasBeenCheeky = false;
 
 -- Fonction principale pour l'utilisation des 
 function AbilityUsageThink()
+    
+    DebugDrawCircle( GetShopLocation( npcBot:GetTeam(), SHOP_SIDE), 275, 255, 0, 0 );
+    DebugDrawCircle( GetShopLocation( npcBot:GetTeam(), SHOP_SIDE2), 275, 0, 255, 0 ); 
 
     -- Le bot envoie un message à tous les joueurs en début de partie
 	if not hasBeenCheeky then
@@ -186,7 +189,7 @@ function ConsiderBlink()
         
         for _,npcEnemy in pairs( tableNearbyEnemyHeroes )
         do
-            if (npcEnemy:GetHealth() < npcEnemy:GetMaxHealth() / 2 and CanCastOffensiveBlink(npcEnemy) and not npcBot:IsSilenced()) 
+            if (CanCastOffensiveBlink(npcEnemy) and not npcBot:IsSilenced() and GetUnitToUnitDistance(npcBot, npcEnemy) >= 300) 
             then
                 return BOT_ACTION_DESIRE_MODERATE, npcEnemy:GetLocation();
             end

@@ -80,14 +80,14 @@ function GetDesire()
 
     local tableNearbyEnemyHeroes = npcBot:GetNearbyHeroes( 1000, true, BOT_MODE_NONE );
     if (#tableNearbyEnemyHeroes >= 1) then
-        local tableNearbyAlliedHeroes = npcBot:GetNearbyHeroes( 1600, false, BOT_MODE_ATTACK );
+        local tableNearbyAlliedHeroes = npcBot:GetNearbyHeroes( 1600, false, BOT_MODE_NONE );
         if (#tableNearbyAlliedHeroes >= 1) then 
             return BOT_MODE_DESIRE_MODERATE;
         else
             return BOT_MODE_DESIRE_NONE;
         end
     else 
-        if (DotaTime() < 1 or not hasPickedUpFirstRune) then 
+        if (DotaTime() < 5 or not hasPickedUpFirstRune) then 
             return BOT_MODE_DESIRE_MODERATE;
         else 
             return BOT_MODE_DESIRE_NONE;
