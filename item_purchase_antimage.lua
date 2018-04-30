@@ -28,21 +28,18 @@ local tableItemsToBuy = {
 				"item_tango",
 				"item_stout_shield",
 				"item_quelling_blade",
-                -- upgrading start items
-				---- poor mans shield
-                "item_slippers",
-                "item_slippers",
-                ---- power treads
+                "item_flask",
+                ---- semi start items
                 "item_boots",
+				"item_ring_of_health",
                 "item_boots_of_elves",
                 "item_gloves",
                 -- go battlefury
                 ---- perseverance
-				"item_ring_of_health",
                 "item_void_stone",
                 ---- remaining items
-                "item_broadsword",
-                "item_claymore",
+                "item_demon_edge",
+                "item_recipe_bfury",
 				-- go manta
                 ---- yasha
                 "item_blade_of_alacrity",
@@ -51,16 +48,16 @@ local tableItemsToBuy = {
 				---- remaining items
                 "item_ultimate_orb",
 				"item_recipe_manta",
+                ---- basher
+                "item_mithril_hammer",
+                "item_belt_of_strength",
+                "item_recipe_basher",
                 -- go aghs
                 "item_blade_of_alacrity",
                 "item_staff_of_wizardry",
                 "item_ogre_axe",
                 "item_point_booster",
                 -- go abyssal
-                ---- basher
-                "item_javelin",
-                "item_belt_of_strength",
-                "item_recipe_basher",
                 ---- vanguard
                 "item_ring_of_health",
                 "item_stout_shield",
@@ -75,7 +72,7 @@ local tableItemsToBuy = {
                 "item_boots",
                 "item_recipe_travel_boots",
                 "item_recipe_travel_boots",
-                -- HERE, CONSIDER A MOONSHARD TO CONSUME?
+                -- TODO: HERE, CONSIDER A MOONSHARD TO CONSUME?
 			};
 
 

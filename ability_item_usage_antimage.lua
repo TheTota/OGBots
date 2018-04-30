@@ -18,13 +18,13 @@ local SKILL_E = "antimage_spell_shield";
 local SKILL_ULT = "antimage_mana_void";
 
 -- Talents d'antimage
-local talentLevel10v1 = "special_bonus_hp_150";
-local talentLevel10v2 = "special_bonus_attack_damage_20";
-local talentLevel15v1 = "special_bonus_attack_speed_20";
-local talentLevel15v2 = "special_bonus_unique_antimage";
-local talentLevel20v1 = "special_bonus_evasion_15";
-local talentLevel20v2 = "special_bonus_all_stats_10";
-local talentLevel25v1 = "special_bonus_agility_25";
+local talentLevel10v1 = "special_bonus_strength_10";
+local talentLevel10v2 = "special_bonus_attack_speed_20";
+local talentLevel15v1 = "special_bonus_unique_antimage_3";
+local talentLevel15v2 = "special_bonus_agility_15";
+local talentLevel20v1 = "special_bonus_unique_antimage_5";
+local talentLevel20v2 = "special_bonus_unique_antimage";
+local talentLevel25v1 = "special_bonus_unique_antimage_4";
 local talentLevel25v2 = "special_bonus_unique_antimage_2";
 
 -- Liste des compétences/talents d'Anti-Mage à levelup dans l'ordre
