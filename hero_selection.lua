@@ -41,24 +41,24 @@ local heroes = {
     "npc_dota_hero_windrunner",
     "npc_dota_hero_witch_doctor",
     "npc_dota_hero_skeleton_king",
-    "npc_dota_hero_zuus",
+    "npc_dota_hero_zuus"
 }
 
 function Think()
-    if ( GetTeam() == TEAM_RADIANT ) then
-        SelectHero( 2, "npc_dota_hero_axe");
-        SelectHero( 3, "npc_dota_hero_lion");
-        SelectHero( 4, "npc_dota_hero_skywrath_mage");
-        SelectHero( 5, "npc_dota_hero_sniper");
-        SelectHero( 6, "npc_dota_hero_skeleton_king");
-    elseif ( GetTeam() == TEAM_DIRE ) then
-        SelectHero( 7, "npc_dota_hero_tidehunter");
-        SelectHero( 8, "npc_dota_hero_witch_doctor");
-        SelectHero( 9, "npc_dota_hero_viper");
-        SelectHero( 10, "npc_dota_hero_antimage" );
-        SelectHero( 11, "npc_dota_hero_warlock");
-    end 
-end 
+    if (GetTeam() == TEAM_RADIANT) then
+        SelectHero(2, "npc_dota_hero_axe")
+        SelectHero(3, "npc_dota_hero_lion")
+        SelectHero(4, "npc_dota_hero_skywrath_mage")
+        SelectHero(5, "npc_dota_hero_sniper")
+        SelectHero(6, "npc_dota_hero_skeleton_king")
+    elseif (GetTeam() == TEAM_DIRE) then
+        SelectHero(7, "npc_dota_hero_tidehunter")
+        SelectHero(8, "npc_dota_hero_witch_doctor")
+        SelectHero(9, "npc_dota_hero_viper")
+        SelectHero(10, "npc_dota_hero_antimage")
+        SelectHero(11, "npc_dota_hero_warlock")
+    end
+end
 
 --
 -- Récupère un héro aléatoire au format string
@@ -67,7 +67,7 @@ function GetRandomHero()
     print(table.getn(heroes))
     -- Get random index in heroes table
     local randInt = RandomInt(1, table.getn(heroes))
-    
+
     -- Store hero
     local hero = heroes[randInt]
 
