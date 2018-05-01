@@ -46,8 +46,8 @@ local heroes = {
 
 function Think()
     if (GetTeam() == TEAM_RADIANT) then
-        SelectHero(2, "npc_dota_hero_axe")
-        SelectHero(3, "npc_dota_hero_witch_doctor")
+        SelectHero(2, "npc_dota_hero_sven")
+        SelectHero(3, "npc_dota_hero_oracle")
         SelectHero(4, "npc_dota_hero_skywrath_mage")
         SelectHero(5, "npc_dota_hero_sniper")
         SelectHero(6, "npc_dota_hero_skeleton_king")

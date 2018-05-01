@@ -47,9 +47,9 @@ function GetDesire()
     _G.sideShopNearby = GetUnitToLocationDistance(npcBot, sideShopLocation) <= 2750
 
     -- Si le prochain item peut être acheté depuis le side shop et on en est assez prêt alors go
-    print("Can be purchased from side shop:", canBePurchasedFromSideShop)
-    print("Has enough gold:", hasEnoughGold)
-    print("Distance between bot and side shop:", _G.sideShopNearby)
+    --print("Can be purchased from side shop:", canBePurchasedFromSideShop)
+    --print("Has enough gold:", hasEnoughGold)
+    --print("Distance between bot and side shop:", _G.sideShopNearby)
 
     if (canBePurchasedFromSideShop and hasEnoughGold and _G.sideShopNearby) then
         return BOT_MODE_DESIRE_MODERATE

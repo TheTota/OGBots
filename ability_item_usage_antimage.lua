@@ -205,19 +205,19 @@ function ConsiderManaVoid()
             npcTarget:GetHealth() <
                 (npcTarget:GetMaxMana() - npcTarget:GetMana()) * 1.1 * (1 - npcTarget:GetMagicResist()))
      then
-        print("Mana perdu de la cible: ", npcTarget:GetMaxMana() - npcTarget:GetMana())
-        print("Santé de la cible: ", npcTarget:GetHealth())
-        print(
-            "Dégats de l'ulti: ",
-            (npcTarget:GetMaxMana() - npcTarget:GetMana()) * nDmgPerMana * (1 - npcTarget:GetMagicResist())
-        )
+        -- print("Mana perdu de la cible: ", npcTarget:GetMaxMana() - npcTarget:GetMana())
+        -- print("Santé de la cible: ", npcTarget:GetHealth())
+        -- print(
+        --     "Dégats de l'ulti: ",
+        --     (npcTarget:GetMaxMana() - npcTarget:GetMana()) * nDmgPerMana * (1 - npcTarget:GetMagicResist())
+        -- )
         return BOT_ACTION_DESIRE_HIGH, npcTarget
     end
 
     -- Quand teamfight, utiliser sur l'ennemi ayant le plus de mana manquant
     local tableNearbyAttackingAlliedHeroes = npcBot:GetNearbyHeroes(1000, false, BOT_MODE_ATTACK)
     if (#tableNearbyAttackingAlliedHeroes >= 2) then
-        print("ALERTE TEAMFIGHT!")
+        -- print("ALERTE TEAMFIGHT!")
         local mostDamageableEnemy = nil
         local mostManaPointsLost = 0
 
@@ -225,14 +225,14 @@ function ConsiderManaVoid()
         local tableNearbyEnemyHeroes = npcBot:GetNearbyHeroes(nCastRange, true, BOT_MODE_NONE)
         for _, npcEnemy in pairs(tableNearbyEnemyHeroes) do
             if (CanCastManaVoidOnTarget(npcEnemy)) then
-                print("On examine un ennemi!")
+                -- print("On examine un ennemi!")
                 lostManaForCurrentEnemy = npcEnemy:GetMaxMana() - npcEnemy:GetMana()
                 if
                     (lostManaForCurrentEnemy > mostManaPointsLost and
                         lostManaForCurrentEnemy > npcEnemy:GetMaxMana() / 2)
                  then
                     mostDamageableEnemy = npcEnemy
-                    print("On a une cible!")
+                    -- print("On a une cible!")
                 end
             end
         end

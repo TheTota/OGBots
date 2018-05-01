@@ -12,11 +12,11 @@ local hasPickedUpFirstRune = false
 function OnStart()
     if (npcBot:GetTeam() == TEAM_RADIANT) then
         --npcBot:ActionImmediate_Chat("I'm going to pick up bottom bounty rune.", false);
-        bountyRuneToPick = RUNE_BOUNTY_1
+        bountyRuneToPick = RUNE_BOUNTY_3
     else
         if (npcBot:GetTeam() == TEAM_DIRE) then
             --npcBot:ActionImmediate_Chat("I'm going to pick up top bounty rune.", false);
-            bountyRuneToPick = RUNE_BOUNTY_3
+            bountyRuneToPick = RUNE_BOUNTY_4
         end
     end
 end
@@ -54,6 +54,7 @@ function Think()
         npcBot:Action_MoveToLocation(GetRuneSpawnLocation(bountyRuneToPick))
         if (GetRuneStatus(bountyRuneToPick) == RUNE_STATUS_AVAILABLE) then
             npcBot:Action_PickUpRune(bountyRuneToPick)
+            print("Picking up rune")
             hasPickedUpFirstRune = true
         end
     end
@@ -67,19 +68,19 @@ function GetDesire()
         return BOT_MODE_DESIRE_NONE
     end
 
-    local tableNearbyEnemyHeroes = npcBot:GetNearbyHeroes(1000, true, BOT_MODE_NONE)
-    if (#tableNearbyEnemyHeroes >= 1) then
-        local tableNearbyAlliedHeroes = npcBot:GetNearbyHeroes(1600, false, BOT_MODE_NONE)
-        if (#tableNearbyAlliedHeroes >= 1) then
-            return BOT_MODE_DESIRE_MODERATE
+    if (DotaTime() < 5 or not hasPickedUpFirstRune) then
+        local tableNearbyEnemyHeroes = npcBot:GetNearbyHeroes(1000, true, BOT_MODE_NONE)
+        if (#tableNearbyEnemyHeroes >= 1) then
+            local tableNearbyAlliedHeroes = npcBot:GetNearbyHeroes(1600, false, BOT_MODE_NONE)
+            if (#tableNearbyAlliedHeroes >= 1) then
+                return BOT_MODE_DESIRE_MODERATE
+            else
+                return BOT_MODE_DESIRE_NONE
+            end
         else
-            return BOT_MODE_DESIRE_NONE
+            return BOT_MODE_DESIRE_MODERATE
         end
     else
-        if (DotaTime() < 5 or not hasPickedUpFirstRune) then
-            return BOT_MODE_DESIRE_MODERATE
-        else
-            return BOT_MODE_DESIRE_NONE
-        end
+        return BOT_MODE_DESIRE_NONE
     end
 end

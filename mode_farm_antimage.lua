@@ -22,9 +22,6 @@ local minutsCounter = 0
 -- Sûreté/désir minimal pour que la lane soit "farmable"
 local minFarmDesire
 
-local isFarmingLane = false
-local isFarmingJungle = false
-
 ----------------------------------------------------------------------------------------------------
 
 function OnStart()
@@ -44,6 +41,7 @@ function Think()
     if (laneToFarm ~= LANE_NONE) then -- we're going to farm a lane
         FarmLane(laneToFarm)
     else -- we're going to farm the jungle
+        FarmJungle()
     end
 end
 
@@ -59,38 +57,37 @@ function GetDesire()
         end
     end
 
-    -- On vérifie qu'aucun héro ennemi n'est présent pdt le farm
-    local tableNearbyEnemyHeroes = npcBot:GetNearbyHeroes(1600, true, BOT_MODE_NONE)
-    if (#tableNearbyEnemyHeroes >= 1 or npcBot:GetHealth() <= 300) then
-        return BOT_MODE_DESIRE_LOW
-    end
-
+    -- Determination du désir de farm d'antimage
     if (HasReachedDominatingStage()) then
         -- Si AM a atteint son stade de dominance, le farm à un importance moindre.
         --print("AM has reached dominating stage");
-        minFarmDesire = BOT_ACTION_DESIRE_LOW
-        return 0.30
+        minFarmDesire = 0.3
+        return BOT_MODE_DESIRE_LOW
     else
         if (OwnsMantaStyle()) then
             --print("AM owns Manta!");
-            minFarmDesire = BOT_ACTION_DESIRE_MODERATE
-            return 0.40
+            minFarmDesire = 0.4
+            return 0.4
         else
             if (OwnsBattlefury()) then
                 -- Si AM possède bfury, il veut farmer mais est plus enclin à agir avec l'équipe
                 --print("AM owns Bfury and wants to farm lanes and jungles");
                 minFarmDesire = 0.625
-                return 0.50
+                return 0.625
             else
                 -- Si AM ne possède pas bfury, il doit à tout prix farmer l'item
                 if (DotaTime() < 600) then
-                    --print("AM doesnt own Bfury and first 10 minutes give priority to laning");
-                    minFarmDesire = BOT_ACTION_DESIRE_HIGH
-                    return 0.10
+                    minFarmDesire = BOT_MODE_DESIRE_HIGH
+                    return BOT_MODE_DESIRE_NONE
                 else
-                    --print("AM doesnt own Bfury but early game is over and he has to focus on it ")
-                    minFarmDesire = BOT_ACTION_DESIRE_HIGH
-                    return 0.60
+                    minFarmDesire = BOT_MODE_DESIRE_HIGH
+                    -- On vérifie qu'aucun héro ennemi n'est présent pdt le farm
+                    local tableNearbyEnemyHeroes = npcBot:GetNearbyHeroes(1600, true, BOT_MODE_NONE)
+                    if (#tableNearbyEnemyHeroes >= 1 or npcBot:GetHealth() <= 300) then
+                        return BOT_MODE_DESIRE_LOW
+                    else
+                        return BOT_MODE_DESIRE_HIGH
+                    end
                 end
             end
         end
@@ -110,9 +107,9 @@ function FarmLane(laneToFarm)
 
     if
         -- If we have a TP and lane to farm is far, TP to lane
-        (GetLaneFrontAmount(GetEnemyTeam(), laneToFarm, false) < 0.55 or
-            GetUnitToLocationDistance(npcBot, frontLeadingCreepWaveLocation) > 3000 and OwnsTeleportationDevice() and
-                not isFarmingCamp)
+        (GetLaneFrontAmount(GetEnemyTeam(), laneToFarm, false) < 0.55 and
+            GetUnitToLocationDistance(npcBot, frontLeadingCreepWaveLocation) > 3000 and
+            OwnsTeleportationDevice())
      then
         --and GetTeleportationDevice():isCooldownReady())
         TeleportToLocation(frontLeadingCreepWaveLocation)
@@ -134,12 +131,6 @@ function FarmLane(laneToFarm)
     end
 end
 
-function FarmJungle()
-    local campToFarmLocation = GetCampToFarmLocation()
-    MoveTowardsCamp(GetCampToFarmLocation)
-    FarmCamp(campToFarmLocation)
-end
-
 function GetLaneToFarm()
     -- Récupération du désir de farm relatif à chaque lane
     local farmTopDesire = GetFarmLaneDesire(LANE_TOP)
@@ -148,30 +139,30 @@ function GetLaneToFarm()
 
     -- On détermine quelle lane est la + sûre, si on peut farm les lanes
     if (farmTopDesire > farmMidDesire and farmTopDesire > farmBotDesire and farmTopDesire > minFarmDesire) then
-        print("La lane à farm est TOP.")
-        isFarmingJungle = false
-        isFarmingLane = true
+        -- print("La lane à farm est TOP.")
         return LANE_TOP
     else
         if (farmMidDesire > farmTopDesire and farmMidDesire > farmBotDesire and farmMidDesire > minFarmDesire) then
-            print("La lane à farm est MID.")
-            isFarmingJungle = false
-            isFarmingLane = true
+            -- print("La lane à farm est MID.")
             return LANE_MID
         else
             if (farmBotDesire > farmMidDesire and farmBotDesire > farmTopDesire and farmBotDesire > minFarmDesire) then
-                print("La lane à farm est BOT.")
-                isFarmingJungle = false
-                isFarmingLane = true
+                -- print("La lane à farm est BOT.")
                 return LANE_BOT
             else
-                print("Aucune lane à farm donc -> JUNGLE.")
-                isFarmingLane = false
-                isFarmingJungle = true
+                -- print("Aucune lane à farm.")
                 return LANE_NONE
             end
         end
     end
+end
+
+----------------------------------------------------------------------------------------------------
+
+function FarmJungle()
+    local campToFarmLocation = GetCampToFarmLocation()
+    MoveTowardsCamp(campToFarmLocation)
+    FarmCamp(campToFarmLocation)
 end
 
 function GetCampToFarmLocation()
@@ -279,8 +270,9 @@ end
 
 function OwnsTeleportationDevice()
     if
-        (npcBot:FindItemSlot("item_tpscroll") ~= -1 or npcBot:FindItemSlot("item_travel_boots") ~= -1 or
-            npcBot:FindItemSlot("item_travel_boots_2") ~= -1)
+        ((npcBot:FindItemSlot("item_tpscroll") >= 1 and npcBot:FindItemSlot("item_tpscroll") <= 6) or
+            (npcBot:FindItemSlot("item_travel_boots") >= 1 and npcBot:FindItemSlot("item_travel_boots") <= 6) or
+            (npcBot:FindItemSlot("item_travel_boots_2") >= 1 and npcBot:FindItemSlot("item_travel_boots_2") <= 6))
      then
         return true
     else
