@@ -1,9 +1,16 @@
 ---------------------------------
 --   Farm mode for Anti-Mage   --
 ---------------------------------
+-- FARM: Plusieurs cas:
+--       - AM ne farm que les lanes.
+--       - AM farm les lanes et les jungle.
 
-local npcBot = GetBot()
-local npcBotTeam = npcBot:GetTeam()
+-- Pour le farm des lanes, AM doit se rendre sur la lane là plus sûre pour la farmer (GetFarmLaneDesire( nLane )).
+-- Si la lane n'est plus sûre, il peut aller jungle si autorisé, ou change de lane (vers la prochaine lane la plus sûre).
+-- Pour le farm de la jungle, AM doit aller de camps en camps, en utilisant blink. Si il le peut, il doit farmer les ancients.
+
+local npcBot = GetBot() -- AM bot
+local npcBotTeam = npcBot:GetTeam() -- AM's team
 
 local canFarmJungle = false
 local canFarmAncients = false
@@ -27,182 +34,17 @@ end
 ----------------------------------------------------------------------------------------------------
 
 function OnEnd()
-    -- ...
+    npcBot:ActionImmediate_Chat("I stop farming for now.", false)
 end
 
 ----------------------------------------------------------------------------------------------------
 
 function Think()
-    -- FARM: Plusieurs cas:
-    --       - AM ne farm que les lanes.
-    --       - AM farm les lanes et les jungle.
-
-    -- Pour le farm des lanes, AM doit se rendre sur la lane là plus sûre pour la farmer (GetFarmLaneDesire( nLane )).
-    -- Si la lane n'est plus sûre, il peut aller jungle si autorisé, ou change de lane (vers la prochaine lane la plus sûre).
-
-    -- Pour le farm de la jungle, AM doit aller de camps en camps, en utilisant blink. Si il le peut, il doit farmer les ancients.
-
-    -- Récupération du désir de farm relatif à chaque lane
-    local farmTopDesire = GetFarmLaneDesire(LANE_TOP)
-    local farmMidDesire = GetFarmLaneDesire(LANE_MID)
-    local farmBotDesire = GetFarmLaneDesire(LANE_BOT)
-
-    local laneToFarm = LANE_NONE
-
-    -- On détermine quelle lane est la + sûre, si on peut farm les lanes
-    if (farmTopDesire > farmMidDesire and farmTopDesire > farmBotDesire and farmTopDesire > minFarmDesire) then
-        print("La lane à farm est TOP.")
-        laneToFarm = LANE_TOP
-        isFarmingJungle = false
-        isFarmingLane = true
-    else
-        if (farmMidDesire > farmTopDesire and farmMidDesire > farmBotDesire and farmMidDesire > minFarmDesire) then
-            print("La lane à farm est MID.")
-            laneToFarm = LANE_MID
-            isFarmingJungle = false
-            isFarmingLane = true
-        else
-            if (farmBotDesire > farmMidDesire and farmBotDesire > farmTopDesire and farmBotDesire > minFarmDesire) then
-                print("La lane à farm est BOT.")
-                laneToFarm = LANE_BOT
-                isFarmingJungle = false
-                isFarmingLane = true
-            else
-                print("Aucune lane à farm donc -> JUNGLE.")
-                laneToFarm = LANE_NONE
-                isFarmingLane = false
-                isFarmingJungle = true
-            end
-        end
+    local laneToFarm = GetLaneToFarm()
+    if (laneToFarm ~= LANE_NONE) then -- we're going to farm a lane
+        FarmLane(laneToFarm)
+    else -- we're going to farm the jungle
     end
-
-    -- FARM DE LANE
-    if (isFarmingLane) then
-        isFarmingCamp = false
-
-        -- Emplacement de la vague de creep meneuse de la lane
-        local frontLeadingCreepWaveLocation = GetLaneFrontLocation(npcBotTeam, laneToFarm, -200)
-
-        -- Si la distance entre le joueur et les creeps à farm est supérieure à la distance entre la tour et les creeps farm, alors on TP.
-        -- Sinon on y va à pied.
-        if (isFarmingLane) then
-            if
-                (GetLaneFrontAmount(GetEnemyTeam(), laneToFarm, false) < 0.55 or
-                    GetUnitToLocationDistance(npcBot, frontLeadingCreepWaveLocation) > 3000 and
-                        OwnsTeleportationDevice() and
-                        not isFarmingCamp)
-             then
-                --and GetTeleportationDevice():isCooldownReady())
-                TeleportToLocation(frontLeadingCreepWaveLocation)
-            else
-                -- On récupère la liste des lane creeps autour du héro
-                local tableNearbyLaneCreeps = npcBot:GetNearbyLaneCreeps(800, true)
-
-                if (#tableNearbyLaneCreeps ~= 0) then
-                    for _, enemyCreep in pairs(tableNearbyLaneCreeps) do
-                        -- Si un creep peut être last hit alors last hit, sinon reste autour de zone de creeps
-                        if (enemyCreep:GetHealth() <= npcBot:GetAttackDamage()) then
-                            npcBot:Action_AttackUnit(enemyCreep, true)
-                        else
-                            npcBot:Action_MoveToLocation(frontLeadingCreepWaveLocation)
-                        end
-                    end
-                else
-                    npcBot:Action_MoveToLocation(frontLeadingCreepWaveLocation)
-                end
-            end
-        end
-    else
-        -- FARM DE JUNGLE
-        if (isFarmingJungle) then
-            local campToFarmLocation = nil
-            local distanceBetweenCampToFarmAndNpc = 1000000
-
-            -- On parcours les camps de neutrals pour trouver celui à farmer
-            local neutralSpawners = GetNeutralSpawners()
-            for _, neutralCamp in pairs(neutralSpawners) do
-                -- Si on a battlefury, on peut aller farm n'importe quel camp de jungle
-                if (not TableContains(farmedOrEmptyCamps, neutralCamp["location"])) then
-                    if (OwnsBattlefury()) then
-                        if
-                            (GetUnitToLocationDistance(npcBot, neutralCamp["location"]) <
-                                distanceBetweenCampToFarmAndNpc)
-                         then
-                            distanceBetweenCampToFarmAndNpc = GetUnitToLocationDistance(npcBot, neutralCamp["location"])
-                            campToFarmLocation = neutralCamp["location"]
-                        end
-                    else
-                        -- Si on ne possède pas de battlefury, on ne peut farmer que les camps de la jungle alliée
-                        if (neutralCamp["team"] == npcBotTeam) then
-                            if
-                                (GetUnitToLocationDistance(npcBot, neutralCamp["location"]) <
-                                    distanceBetweenCampToFarmAndNpc)
-                             then
-                                distanceBetweenCampToFarmAndNpc =
-                                    GetUnitToLocationDistance(npcBot, neutralCamp["location"])
-                                campToFarmLocation = neutralCamp["location"]
-                            end
-                        end
-                    end
-                end
-            end
-
-            -- On va au camp et on le tue les creeps ou attaque ce qui est en chemin (provisoire)
-            if (not isFarmingCamp) then
-                -- Déplacement jusqu'au camp à farm
-                npcBot:Action_MoveToLocation(campToFarmLocation)
-
-                -- On récupère les informations relatives à blink d'anti-mage
-                abilityBlink = npcBot:GetAbilityByName("antimage_blink")
-                local nCastRange = abilityBlink:GetSpecialValueInt("blink_range")
-
-                if
-                    (abilityBlink:IsFullyCastable() and
-                        GetUnitToLocationDistance(npcBot, campToFarmLocation) <= nCastRange and
-                        GetUnitToLocationDistance(npcBot, campToFarmLocation) > 300)
-                 then
-                    -- Blink avec treads switching si treads
-                    -- TODO: Treads switching
-                    --    if (OwnsPowerTreads()) then
-                    --        npcBot:Action_UseAbility(npcBot:GetItemInSlot(npcBot:FindItemSlot("item_power_treads")));
-                    --        npcBot:Action_UseAbility(npcBot:GetItemInSlot(npcBot:FindItemSlot("item_power_treads")));
-                    --    end
-                    npcBot:Action_UseAbilityOnLocation(abilityBlink, campToFarmLocation)
-                --    if (OwnsPowerTreads()) then
-                --        npcBot:Action_UseAbility(npcBot:GetItemInSlot(npcBot:FindItemSlot("item_power_treads")));
-                --    end
-                end
-            end
-
-            local creepsNeutresAuxAlentours = npcBot:GetNearbyNeutralCreeps(750)
-
-            -- Si on est près du camp à farmer et que des creeps neutres sont dans les parages on les attaque
-            if (GetUnitToLocationDistance(npcBot, campToFarmLocation) < 750 and #creepsNeutresAuxAlentours ~= 0) then
-                npcBot:Action_AttackMove(campToFarmLocation)
-                isFarmingCamp = true
-            end
-
-            -- Si on farm le camp et que aucun creep neutre
-            if
-                ((isFarmingCamp and #creepsNeutresAuxAlentours == 0) or
-                    (#creepsNeutresAuxAlentours == 0 and GetUnitToLocationDistance(npcBot, campToFarmLocation) < 70))
-             then
-                table.insert(farmedOrEmptyCamps, campToFarmLocation)
-                print("Farmed or empty camp here!")
-                isFarmingCamp = false
-            end
-        end
-    end
-end
-
-function TableContains(table, val)
-    for _, value in pairs(table) do
-        if value == val then
-            return true
-        end
-    end
-
-    return false
 end
 
 ----------------------------------------------------------------------------------------------------
@@ -256,6 +98,157 @@ function GetDesire()
 
     -- Au cas où..
     return BOT_MODE_DESIRE_MODERATE
+end
+
+----------------------------------------------------------------------------------------------------
+
+function FarmLane(laneToFarm)
+    isFarmingCamp = false -- stop farming camp
+
+    -- Get front leading creep wave location on the lane to farm
+    local frontLeadingCreepWaveLocation = GetLaneFrontLocation(npcBotTeam, laneToFarm, -200)
+
+    if
+        -- If we have a TP and lane to farm is far, TP to lane
+        (GetLaneFrontAmount(GetEnemyTeam(), laneToFarm, false) < 0.55 or
+            GetUnitToLocationDistance(npcBot, frontLeadingCreepWaveLocation) > 3000 and OwnsTeleportationDevice() and
+                not isFarmingCamp)
+     then
+        --and GetTeleportationDevice():isCooldownReady())
+        TeleportToLocation(frontLeadingCreepWaveLocation)
+    else -- Else just walk towards the creep wave
+        local tableNearbyLaneCreeps = npcBot:GetNearbyLaneCreeps(800, true)
+
+        if (#tableNearbyLaneCreeps ~= 0) then
+            for _, enemyCreep in pairs(tableNearbyLaneCreeps) do
+                -- Si un creep peut être last hit alors last hit, sinon reste autour de zone de creeps
+                if (enemyCreep:GetHealth() <= npcBot:GetAttackDamage()) then
+                    npcBot:Action_AttackUnit(enemyCreep, true)
+                else
+                    npcBot:Action_MoveToLocation(frontLeadingCreepWaveLocation)
+                end
+            end
+        else
+            npcBot:Action_MoveToLocation(frontLeadingCreepWaveLocation)
+        end
+    end
+end
+
+function FarmJungle()
+    local campToFarmLocation = GetCampToFarmLocation()
+    MoveTowardsCamp(GetCampToFarmLocation)
+    FarmCamp(campToFarmLocation)
+end
+
+function GetLaneToFarm()
+    -- Récupération du désir de farm relatif à chaque lane
+    local farmTopDesire = GetFarmLaneDesire(LANE_TOP)
+    local farmMidDesire = GetFarmLaneDesire(LANE_MID)
+    local farmBotDesire = GetFarmLaneDesire(LANE_BOT)
+
+    -- On détermine quelle lane est la + sûre, si on peut farm les lanes
+    if (farmTopDesire > farmMidDesire and farmTopDesire > farmBotDesire and farmTopDesire > minFarmDesire) then
+        print("La lane à farm est TOP.")
+        isFarmingJungle = false
+        isFarmingLane = true
+        return LANE_TOP
+    else
+        if (farmMidDesire > farmTopDesire and farmMidDesire > farmBotDesire and farmMidDesire > minFarmDesire) then
+            print("La lane à farm est MID.")
+            isFarmingJungle = false
+            isFarmingLane = true
+            return LANE_MID
+        else
+            if (farmBotDesire > farmMidDesire and farmBotDesire > farmTopDesire and farmBotDesire > minFarmDesire) then
+                print("La lane à farm est BOT.")
+                isFarmingJungle = false
+                isFarmingLane = true
+                return LANE_BOT
+            else
+                print("Aucune lane à farm donc -> JUNGLE.")
+                isFarmingLane = false
+                isFarmingJungle = true
+                return LANE_NONE
+            end
+        end
+    end
+end
+
+function GetCampToFarmLocation()
+    local campToFarmLocation = nil
+    local distanceBetweenCampToFarmAndNpc = 1000000
+
+    -- On parcours les camps de neutrals pour trouver celui à farmer
+    local neutralSpawners = GetNeutralSpawners()
+    for _, neutralCamp in pairs(neutralSpawners) do
+        -- Si on a battlefury, on peut aller farm n'importe quel camp de jungle
+        if (not TableContains(farmedOrEmptyCamps, neutralCamp["location"])) then
+            if (OwnsBattlefury()) then
+                if (GetUnitToLocationDistance(npcBot, neutralCamp["location"]) < distanceBetweenCampToFarmAndNpc) then
+                    distanceBetweenCampToFarmAndNpc = GetUnitToLocationDistance(npcBot, neutralCamp["location"])
+                    campToFarmLocation = neutralCamp["location"]
+                end
+            else
+                -- Si on ne possède pas de battlefury, on ne peut farmer que les camps de la jungle alliée
+                if (neutralCamp["team"] == npcBotTeam) then
+                    if (GetUnitToLocationDistance(npcBot, neutralCamp["location"]) < distanceBetweenCampToFarmAndNpc) then
+                        distanceBetweenCampToFarmAndNpc = GetUnitToLocationDistance(npcBot, neutralCamp["location"])
+                        campToFarmLocation = neutralCamp["location"]
+                    end
+                end
+            end
+        end
+    end
+
+    return campToFarmLocation
+end
+
+function MoveTowardsCamp(campToFarmLocation)
+    -- On va au camp et on le tue les creeps ou attaque ce qui est en chemin (provisoire)
+    if (not isFarmingCamp) then
+        -- Déplacement jusqu'au camp à farm
+        npcBot:Action_MoveToLocation(campToFarmLocation)
+
+        -- On récupère les informations relatives à blink d'anti-mage
+        abilityBlink = npcBot:GetAbilityByName("antimage_blink")
+        local nCastRange = abilityBlink:GetSpecialValueInt("blink_range")
+
+        if
+            (abilityBlink:IsFullyCastable() and GetUnitToLocationDistance(npcBot, campToFarmLocation) <= nCastRange and
+                GetUnitToLocationDistance(npcBot, campToFarmLocation) > 300)
+         then
+            -- Blink avec treads switching si treads
+            -- TODO: Treads switching
+            --    if (OwnsPowerTreads()) then
+            --        npcBot:Action_UseAbility(npcBot:GetItemInSlot(npcBot:FindItemSlot("item_power_treads")));
+            --        npcBot:Action_UseAbility(npcBot:GetItemInSlot(npcBot:FindItemSlot("item_power_treads")));
+            --    end
+            npcBot:Action_UseAbilityOnLocation(abilityBlink, campToFarmLocation)
+        --    if (OwnsPowerTreads()) then
+        --        npcBot:Action_UseAbility(npcBot:GetItemInSlot(npcBot:FindItemSlot("item_power_treads")));
+        --    end
+        end
+    end
+end
+
+function FarmCamp(campToFarmLocation)
+    local creepsNeutresAuxAlentours = npcBot:GetNearbyNeutralCreeps(750)
+
+    -- Si on est près du camp à farmer et que des creeps neutres sont dans les parages on les attaque
+    if (GetUnitToLocationDistance(npcBot, campToFarmLocation) < 750 and #creepsNeutresAuxAlentours ~= 0) then
+        npcBot:Action_AttackMove(campToFarmLocation)
+        isFarmingCamp = true
+    end
+
+    -- Si on farm le camp et que aucun creep neutre
+    if
+        ((isFarmingCamp and #creepsNeutresAuxAlentours == 0) or
+            (#creepsNeutresAuxAlentours == 0 and GetUnitToLocationDistance(npcBot, campToFarmLocation) < 70))
+     then
+        table.insert(farmedOrEmptyCamps, campToFarmLocation)
+        print("Farmed or empty camp here!")
+        isFarmingCamp = false
+    end
 end
 
 ----------------------------------------------------------------------------------------------------
@@ -333,4 +326,14 @@ function GetEnemyTeam()
     if (npcBotTeam == TEAM_DIRE) then
         return TEAM_RADIANT
     end
+end
+
+function TableContains(table, val)
+    for _, value in pairs(table) do
+        if value == val then
+            return true
+        end
+    end
+
+    return false
 end
